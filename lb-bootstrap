@@ -1,0 +1,67 @@
+#!/bin/sh
+
+cat <<ERR > /etc/lb/500.http
+HTTP/1.0 500 Internal Server Error
+Cache-Control: no-cache
+Connection: close
+Content-Type: text/html
+
+<html>
+  <head><script>window.location = "${ERROR_URL}?href=" + encodeURIComponent(window.location.href)</script></head>
+</html>
+ERR
+
+cat <<ERR > /etc/lb/502.http
+HTTP/1.0 502 Bad Gateway
+Cache-Control: no-cache
+Connection: close
+Content-Type: text/html
+
+<html>
+  <head><script>window.location = "${ERROR_URL}?href=" + encodeURIComponent(window.location.href)</script></head>
+</html>
+ERR
+
+cat <<ERR > /etc/lb/503.http
+HTTP/1.0 503 Service Unavailable
+Cache-Control: no-cache
+Connection: close
+Content-Type: text/html
+
+<html>
+  <head><script>window.location = "${ERROR_URL}?href=" + encodeURIComponent(window.location.href)</script></head>
+</html>
+ERR
+
+cat <<ERR > /etc/lb/504.http
+HTTP/1.0 504 Gateway Timeout
+Cache-Control: no-cache
+Connection: close
+Content-Type: text/html
+
+<html>
+  <head><script>window.location = "${ERROR_URL}?href=" + encodeURIComponent(window.location.href)</script></head>
+</html>
+ERR
+
+cat <<ERR > /etc/lb/404.http
+HTTP/1.0 404 Not Found
+Cache-Control: no-cache
+Connection: close
+Content-Type: text/html
+
+<html>
+  <head><script>window.location = "${FALLBACK_URL}?href=" + encodeURIComponent(window.location.href)</script></head>
+</html>
+ERR
+
+confd -confdir /etc/confd -log-level debug -backend rancher -node rancher-metadata.rancher.internal -prefix /2015-12-19 -onetime true
+while [[ ! -e /etc/haproxy/haproxy.cfg ]]; do
+  echo "Waiting for HAProxy config"
+  sleep 10
+  confd -confdir /etc/confd -log-level debug -backend rancher -node rancher-metadata.rancher.internal -prefix /2015-12-19 -onetime true
+done
+
+rsyslogd
+/usr/local/sbin/haproxy -D -p /var/run/haproxy.pid  -f /etc/haproxy/haproxy.cfg -sf $(ps -ef | grep /usr/local/sbin/haproxy | grep -v grep | awk '{ print $1 }' | xargs)
+supervisord -c /etc/supervisor/supervisor.conf

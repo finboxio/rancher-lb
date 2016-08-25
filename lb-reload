@@ -1,0 +1,122 @@
+#! /bin/sh
+
+SPLIT_TOKEN=${SPLIT_TOKEN:-__split__}
+
+entries=$(cat /etc/lb/entries | grep . | sort | uniq)
+
+# Compile backend data into entries.yml
+frontends=
+current_entry=
+current_domain=
+current_ip=
+echo "backends:" > /etc/lb/entries.yml
+for entry in $entries; do
+  stack=$(echo $entry | awk -F "$SPLIT_TOKEN" '{ print $1 }')
+  service=$(echo $entry | awk -F "$SPLIT_TOKEN" '{ print $2 }')
+  port=$(echo $entry | awk -F "$SPLIT_TOKEN" '{ print $3 }')
+  if [[ "$stack$service$port" != "$current_entry" ]]; then
+    echo "  -" >> /etc/lb/entries.yml
+    echo "    id: ${stack}_${service}_${port}" >> /etc/lb/entries.yml
+    echo "    stack: $stack" >> /etc/lb/entries.yml
+    echo "    service: $service" >> /etc/lb/entries.yml
+    echo "    port: $port" >> /etc/lb/entries.yml
+    current_entry="$stack$service$port"
+    current_domain=
+    current_ip=
+  fi
+  key=$(echo $entry | awk -F "$SPLIT_TOKEN" '{ print $4 }')
+  value=$(echo $entry | awk -F "$SPLIT_TOKEN" '{ print $5 }')
+  if [[ "$key" == "frontend" ]]; then
+    frontends="$frontends $value"
+    port=$(echo $value | awk -F '/' '{ print $1 }')
+    mode=$(echo $value | awk -F '/' '{ print $2 }')
+    case $port in
+      ''|*[!0-9]*) is_number="false" ;;
+      *) is_number="true" ;;
+    esac
+    echo "    frontend: $value" >> /etc/lb/entries.yml
+    if [[ "$is_number" == 'true' && "$mode" != "" ]]; then
+      echo "    mode: $mode" >> /etc/lb/entries.yml
+    fi
+  elif [[ "$key" == "domain" || "$key" == "domains" ]]; then
+    if [[ "$current_domain" == "" ]]; then
+      echo "    domains:" >> /etc/lb/entries.yml
+    fi
+    current_domain=$value
+    for domain in $(echo $value | tr ',' ' '); do
+      proto="$(echo $domain | grep :// | sed -e's,^\(.*://\).*,\1,g')"
+      url="$(echo ${domain##$proto})"
+      proto="$(echo ${proto%://})"
+      auth="$(echo $url | grep @ | cut -d@ -f1)"
+      user="$(echo "$auth" | awk -F ':' '{ print $1 }')"
+      pass="$(echo "$auth" | awk -F ':' '{ print $2 }')"
+      host="$(echo ${url##$auth@} | cut -d/ -f1)"
+      port="$(echo $host | sed -e 's,^.*:,:,g' -e 's,.*:\([0-9]*\).*,\1,g' -e 's,[^0-9],,g')"
+      path="$(echo $url | grep / | cut -d/ -f2-)"
+      echo "      -" >> /etc/lb/entries.yml
+      echo "        id: $(echo $domain | sed -E 's/[[:punct:]]/_/g')" >> /etc/lb/entries.yml
+      if [[ "$proto" != "" ]];  then echo "        scheme: $proto" >> /etc/lb/entries.yml; fi
+      if [[ "$user" != "" ]];   then echo "        user: $user" >> /etc/lb/entries.yml; fi
+      if [[ "$pass" != "" ]];   then echo "        pass: $pass" >> /etc/lb/entries.yml; fi
+      if [[ "$host" != "" ]];   then echo "        host: $host" >> /etc/lb/entries.yml; fi
+      if [[ "$path" != "" ]];   then echo "        path: /$path" >> /etc/lb/entries.yml; fi
+    done
+  elif [[ "$key" == "container" ]]; then
+    ip=$value
+    health=$(echo $entry | awk -F "$SPLIT_TOKEN" '{ print $6 }')
+
+    if [[ "$health" == "healthy" ]]; then
+      health="true"
+    else
+      health="false"
+    fi
+
+    if [[ "$current_ip" == "" ]]; then
+      echo "    containers:" >> /etc/lb/entries.yml
+    fi
+
+    current_ip=$ip
+    echo "      -" >> /etc/lb/entries.yml
+    echo "        ip: $ip" >> /etc/lb/entries.yml
+    echo "        healthy: $health" >> /etc/lb/entries.yml
+  fi
+done
+
+frontends=$(echo "$frontends" | tr ' ' '\n' | sort | uniq)
+echo "frontends:" >> /etc/lb/entries.yml
+for frontend in $frontends; do
+  port=$(echo $frontend | awk -F '/' '{ print $1 }')
+  mode=$(echo $frontend | awk -F '/' '{ print $2 }')
+  case $port in
+    ''|*[!0-9]*) is_number="false" ;;
+    *) is_number="true" ;;
+  esac
+  if [[ "$is_number" == 'true' ]]; then
+    echo "  $frontend:" >> /etc/lb/entries.yml
+    echo "    name: $(echo $frontend | sed -E 's/[[:punct:]]/_/g')" >> /etc/lb/entries.yml
+    echo "    port: $port" >> /etc/lb/entries.yml
+    echo "    mode: ${mode:-http}" >> /etc/lb/entries.yml
+  fi
+done
+
+# Download service metadata to metadata.yml and parse root domains
+curl -s -H 'Accept: application/json' http://rancher-metadata.rancher.internal/latest/self/service/metadata \
+  | jq '.domains = (.domains | map(capture("(?<scheme>.*://)?(?<host>.*)")
+    | { scheme: .scheme[0:-3],  host }
+    | { scheme, host, id: (.scheme + "_" + .host | gsub("[.]"; "_")) }))' \
+  | json2yml > /etc/lb/metadata.yml
+
+# Merge entries and metadata to config.yml
+node -e "m = require('merge-yaml'); console.log(JSON.stringify(m(['/etc/lb/entries.yml','/etc/lb/metadata.yml'])));" | json2yml > /etc/lb/config.yml
+
+# Generate haproxy config file
+gotpl /etc/lb/haproxy.cfg.tpl </etc/lb/config.yml > /etc/lb/haproxy.cfg
+
+# Validate haproxy config and reload
+if haproxy -c -f /etc/lb/haproxy.cfg; then
+  cp /etc/lb/haproxy.cfg /etc/haproxy/haproxy.cfg
+  /usr/local/sbin/haproxy -D -p /var/run/haproxy.pid  -f /etc/haproxy/haproxy.cfg -sf $(ps -ef | grep /usr/local/sbin/haproxy | grep -v grep | awk '{ print $1 }' | xargs)
+else
+  echo "invalid haproxy config"
+fi
+

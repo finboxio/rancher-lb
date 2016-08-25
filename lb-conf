@@ -1,0 +1,11 @@
+#! /bin/sh
+
+version=
+while true; do
+  updated=$(wget -qO- http://rancher-metadata.rancher.internal/2015-12-19/version)
+  if [[ "$updated" != "$version" ]]; then
+    version=$updated
+    confd -confdir /etc/confd -log-level debug -backend rancher -node rancher-metadata.rancher.internal -prefix /2015-12-19 -onetime true
+  fi
+  sleep 4
+done
