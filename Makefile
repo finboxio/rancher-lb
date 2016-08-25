@@ -21,6 +21,9 @@ DOCKER_BUILD := $(shell if [[ "$(DOCKER_REGISTRY)" ]]; then echo $(DOCKER_REGIST
 docker.build:
 	@docker build -t $(DOCKER_BUILD) .
 
+docker.push: docker.build
+	@docker push $(DOCKER_BUILD)
+
 info:
 	@echo "git branch:      $(GIT_BRANCH)"
 	@echo "git commit:      $(GIT_COMMIT)"
@@ -34,6 +37,3 @@ info:
 
 version:
 	@echo $(BUILD_VERSION) | tr -d '\r' | tr -d '\n' | tr -d ' '
-
-docker.push: docker.build
-	@docker push $(DOCKER_BUILD)
