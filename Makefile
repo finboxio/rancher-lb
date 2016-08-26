@@ -16,13 +16,16 @@ BUILD_VERSION := $(shell if [[ "$(VERSION_DIRTY)" -gt "0" ]]; then echo "$(VERSI
 BUILD_VERSION := $(shell if [[ "$(VERSION_DIRTY)" -gt "0" ]] || [[ "$(GIT_DIRTY)" == "true" ]]; then echo "$(BUILD_VERSION)-dev"; else echo $(BUILD_VERSION); fi)
 BUILD_VERSION := $(shell if [[ "$(GIT_BRANCH)" != "master" ]]; then echo $(GIT_BRANCH)-$(BUILD_VERSION); else echo $(BUILD_VERSION); fi)
 
-DOCKER_BUILD := $(shell if [[ "$(DOCKER_REGISTRY)" ]]; then echo $(DOCKER_REGISTRY)/$(DOCKER_USER)/$(DOCKER_IMAGE):$(BUILD_VERSION); else echo $(DOCKER_USER)/$(DOCKER_IMAGE):$(BUILD_VERSION); fi)
+DOCKER_IMAGE := $(shell if [[ "$(DOCKER_REGISTRY)" ]]; then echo $(DOCKER_REGISTRY)/$(DOCKER_USER)/$(DOCKER_IMAGE); else echo $(DOCKER_USER)/$(DOCKER_IMAGE); fi)
+DOCKER_VERSION := $(shell echo "$(DOCKER_IMAGE):$(BUILD_VERSION)")
+DOCKER_LATEST := $(shell if [[ "$(VERSION_DIRTY)" -gt "0" ]] || [[ "$(GIT_DIRTY)" == "true" ]]; then echo "$(DOCKER_IMAGE):dev"; else echo $(DOCKER_IMAGE):latest; fi)
 
 docker.build:
-	@docker build -t $(DOCKER_BUILD) .
+	@docker build -t $(DOCKER_VERSION) -t $(DOCKER_LATEST) .
 
 docker.push: docker.build
-	@docker push $(DOCKER_BUILD)
+	@docker push $(DOCKER_VERSION)
+	@docker push $(DOCKER_LATEST)
 
 info:
 	@echo "git branch:      $(GIT_BRANCH)"
@@ -33,7 +36,8 @@ info:
 	@echo "commits since:   $(VERSION_DIRTY)"
 	@echo "build commit:    $(BUILD_COMMIT)"
 	@echo "build version:   $(BUILD_VERSION)"
-	@echo "docker image:    $(DOCKER_BUILD)"
+	@echo "docker images:   $(DOCKER_VERSION)"
+	@echo "                 $(DOCKER_LATEST)"
 
 version:
 	@echo $(BUILD_VERSION) | tr -d '\r' | tr -d '\n' | tr -d ' '
