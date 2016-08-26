@@ -63,9 +63,10 @@ for entry in $entries; do
     done
   elif [[ "$key" == "container" ]]; then
     ip=$value
-    health=$(echo $entry | awk -F "$SPLIT_TOKEN" '{ print $6 }')
+    state=$(echo $entry | awk -F "$SPLIT_TOKEN" '{ print $6 }')
+    health=$(echo $entry | awk -F "$SPLIT_TOKEN" '{ print $7 }')
 
-    if [[ "$health" == "healthy" ]]; then
+    if [[ "$health" == "healthy" && "$state" == "running" ]]; then
       health="true"
     else
       health="false"

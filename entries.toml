@@ -3,6 +3,7 @@ src = "entries.tpl"
 dest = "/etc/lb/entries"
 mode = "0644"
 keys = [
-  "/stacks"
+  "/stacks",
+  "/self"
 ]
 reload_cmd = "/usr/bin/lb-reload"
