@@ -1,4 +1,10 @@
 
+0.0.4 / 2016-09-06
+==================
+
+  * fix https-redirect rules
+  * only redirect to https for root domain if host matches
+
 0.0.3 / 2016-08-25
 ==================
 
