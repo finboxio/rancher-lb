@@ -8,7 +8,7 @@ GIT_DIRTY := $(shell git status --porcelain | wc -l)
 GIT_DIRTY := $(shell if [[ "$(GIT_DIRTY)" -gt "0" ]]; then echo "true"; else echo "false"; fi)
 
 VERSION := $(shell git describe --abbrev=0)
-VERSION_DIRTY := $(shell git log --pretty=format:%h $(VERSION)..HEAD | wc -l)
+VERSION_DIRTY := $(shell git log --pretty=format:%h $(VERSION)..HEAD | wc -l | tr -d ' ')
 
 BUILD_COMMIT := $(shell if [[ "$(GIT_DIRTY)" == "true" ]]; then echo $(GIT_COMMIT)+dev; else echo $(GIT_COMMIT); fi)
 BUILD_COMMIT := $(shell echo $(BUILD_COMMIT) | cut -c1-12)

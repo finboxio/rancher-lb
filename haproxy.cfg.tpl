@@ -90,7 +90,7 @@ frontend live_check
   {{ range $root := $.domains -}}
   {{ $did := $root.id -}}
   {{ if $root.scheme -}}
-  acl acl_{{ $did }}_default hdr(host) -i {{ $root.host }}
+  acl acl_{{ $did }}_default hdr_end(host) -i {{ $root.host }}
   acl acl_{{ $did }}_default_https {{ if eq $root.scheme "https" -}} always_true {{ else -}} always_false {{- end }}
   redirect scheme https code 301 if !is_proxy_https acl_{{ $did }}_default acl_{{ $did }}_default_https
   {{ end }}
@@ -121,7 +121,9 @@ frontend live_check
 
   {{ if $domain.scheme -}}
   acl acl_{{ $did }}_https {{ if eq $domain.scheme "https" -}} always_true {{ else -}} always_false {{- end }}
-  redirect scheme https code 301 if !is_proxy_https acl_{{ $did }}_https
+  acl acl_{{ $did }}_https_host {{ if $domain.host }} hdr(host) -i {{ $domain.host }} {{ else }} always_true {{ end }}
+  acl acl_{{ $did }}_https_path {{ if $domain.path }} path -i {{ $domain.path }} {{ else }} always_true {{ end }}
+  redirect scheme https code 301 if !is_proxy_https acl_{{ $did }}_https_host acl_{{ $did }}_https_path acl_{{ $did }}_https
   {{- end }}
 
   ####
