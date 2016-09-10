@@ -15,4 +15,4 @@ haproxy:
     - maxconn 4096
     - debug
     domains:
-    - http://rancher.local
+    - http://rancher.dev
