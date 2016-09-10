@@ -1,4 +1,10 @@
 
+0.0.8 / 2016-09-10
+==================
+
+  * add checks for ERROR_URL and FALLBACK_URL before replacing errorfiles
+  * update example domain to rancher.dev
+
 0.0.7 / 2016-09-10
 ==================
 
