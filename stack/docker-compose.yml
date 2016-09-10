@@ -1,0 +1,7 @@
+haproxy:
+  ports:
+  - 80:80/tcp
+  labels:
+    io.rancher.scheduler.global: 'true'
+    lb.haproxy.9090.frontend: 80/http
+  image: finboxio/rancher-lb

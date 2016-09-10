@@ -1,0 +1,18 @@
+haproxy:
+  health_check:
+    port: 80
+    interval: 2000
+    initializing_timeout: 20000
+    unhealthy_threshold: 3
+    strategy: recreate
+    response_timeout: 2000
+    healthy_threshold: 2
+  metadata:
+    scope: service
+    stats:
+      port: 9090
+    global:
+    - maxconn 4096
+    - debug
+    domains:
+    - http://rancher.local
