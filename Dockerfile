@@ -69,4 +69,4 @@ VOLUME /etc/haproxy
 COPY lb-* /usr/bin/
 RUN chmod +x /usr/bin/lb-*
 
-ENTRYPOINT lb-bootstrap
+ENTRYPOINT /usr/bin/lb-bootstrap
