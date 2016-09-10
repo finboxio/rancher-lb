@@ -1,4 +1,10 @@
 
+0.0.5 / 2016-09-10
+==================
+
+  * add sample stack for local rancher cluster
+  * set entrypoint in dockerfile
+
 0.0.4 / 2016-09-06
 ==================
 
