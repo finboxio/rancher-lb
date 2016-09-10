@@ -44,6 +44,8 @@ Content-Type: text/html
   <head><script>window.location = "${ERROR_URL}?href=" + encodeURIComponent(window.location.href)</script></head>
 </html>
 ERR
+else
+cp /etc/haproxy/errors/*.http /etc/lb/
 fi
 
 if [[ "$FALLBACK_URL" != "" ]]; then
@@ -57,6 +59,8 @@ Content-Type: text/html
   <head><script>window.location = "${FALLBACK_URL}?href=" + encodeURIComponent(window.location.href)</script></head>
 </html>
 ERR
+else
+cp /etc/haproxy/errors/503.http /etc/lb/404.http
 fi
 
 confd -confdir /etc/confd -log-level debug -backend rancher -node rancher-metadata.rancher.internal -prefix /2015-12-19 -onetime true
