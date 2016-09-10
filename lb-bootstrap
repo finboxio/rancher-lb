@@ -1,5 +1,6 @@
 #!/bin/sh
 
+if [[ "$ERROR_URL" != "" ]]; then
 cat <<ERR > /etc/lb/500.http
 HTTP/1.0 500 Internal Server Error
 Cache-Control: no-cache
@@ -43,7 +44,9 @@ Content-Type: text/html
   <head><script>window.location = "${ERROR_URL}?href=" + encodeURIComponent(window.location.href)</script></head>
 </html>
 ERR
+fi
 
+if [[ "$FALLBACK_URL" != "" ]]; then
 cat <<ERR > /etc/lb/404.http
 HTTP/1.0 404 Not Found
 Cache-Control: no-cache
@@ -54,6 +57,7 @@ Content-Type: text/html
   <head><script>window.location = "${FALLBACK_URL}?href=" + encodeURIComponent(window.location.href)</script></head>
 </html>
 ERR
+fi
 
 confd -confdir /etc/confd -log-level debug -backend rancher -node rancher-metadata.rancher.internal -prefix /2015-12-19 -onetime true
 while [[ ! -e /etc/haproxy/haproxy.cfg ]]; do
