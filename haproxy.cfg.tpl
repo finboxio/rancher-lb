@@ -50,7 +50,7 @@ frontend live_check
   ############################
 
   {{ if eq $frontend.mode "http" -}}
-  bind *:{{ .port }} accept-proxy
+  bind *:{{ .port }} {{ if $frontend.proxy -}} accept-proxy {{ end }}
   mode http
 
   ####
