@@ -151,7 +151,7 @@ The `proxy` setting enables proxy-protocol for the frontend. If you don't know w
 >
 > This specific configuration in `options` is an example of a useful haproxy trick to set up a universal 404 page for all of your services. It listens for 404 html responses for any of your backends and redirects them all to a single page with a reference to the missing resource that was requested.
 
-You should be aware that **it's impossible to have both a tcp and an http frontend listening on the same port.** So try not to specify conflicting labels like `lb.haproxy.5000.frontend=80/tcp` on one service and `lb.haproxy.8080=80/http` on another. It doesn't make sense and it won't work. I don't know exactly what will happen, but all of your friends will definitely make fun of you.
+You should be aware that **it's impossible to have both a tcp and an http frontend listening on the same port.** So try not to specify conflicting labels like `lb.haproxy.5000.frontend=80/tcp` on one service and `lb.haproxy.8080.frontend=80/http` on another. It doesn't make sense and it won't work. I don't know exactly what will happen, but all of your friends will definitely make fun of you and your mother will probably stop answering your calls.
 
 ##### Specifying domains
 
