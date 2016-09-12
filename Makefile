@@ -1,5 +1,6 @@
 DOCKER_USER=finboxio
 DOCKER_IMAGE=rancher-lb
+RANCHER_ENV=local
 
 GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 GIT_COMMIT := $(shell git rev-parse HEAD)
@@ -19,6 +20,10 @@ BUILD_VERSION := $(shell if [[ "$(GIT_BRANCH)" != "master" ]]; then echo $(GIT_B
 DOCKER_IMAGE := $(shell if [[ "$(DOCKER_REGISTRY)" ]]; then echo $(DOCKER_REGISTRY)/$(DOCKER_USER)/$(DOCKER_IMAGE); else echo $(DOCKER_USER)/$(DOCKER_IMAGE); fi)
 DOCKER_VERSION := $(shell echo "$(DOCKER_IMAGE):$(BUILD_VERSION)")
 DOCKER_LATEST := $(shell if [[ "$(VERSION_DIRTY)" -gt "0" ]] || [[ "$(GIT_DIRTY)" == "true" ]]; then echo "$(DOCKER_IMAGE):dev"; else echo $(DOCKER_IMAGE):latest; fi)
+
+RANCHER_URL := $(shell renv $(RANCHER_ENV) | grep RANCHER_URL | cut -d= -f2)
+RANCHER_ACCESS_KEY := $(shell renv $(RANCHER_ENV) | grep RANCHER_ACCESS_KEY | cut -d= -f2)
+RANCHER_SECRET_KEY := $(shell renv $(RANCHER_ENV) | grep RANCHER_SECRET_KEY | cut -d= -f2)
 
 docker.build:
 	@docker build -t $(DOCKER_VERSION) -t $(DOCKER_LATEST) .
@@ -41,3 +46,13 @@ info:
 
 version:
 	@echo $(BUILD_VERSION) | tr -d '\r' | tr -d '\n' | tr -d ' '
+
+rancher.deploy: docker.push
+	@rancher-compose \
+		--url $(RANCHER_URL) \
+		--access-key $(RANCHER_ACCESS_KEY) \
+		--secret-key $(RANCHER_SECRET_KEY) \
+		-p lb \
+		-f stack/docker-compose.yml \
+		-r stack/rancher-compose.yml \
+		up --force-upgrade -d
