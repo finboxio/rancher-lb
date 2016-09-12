@@ -51,7 +51,7 @@ haproxy:
     defaults:
     - timeout connect 5000
     domains:
-    - http://rancher.dev
+    - http://rancher
     scope: service
 ```
 
@@ -61,7 +61,7 @@ You might notice that the `global` section in our service metadata accepts arbit
 
 The label `lb.haproxy.9090.frontend=80/http` is where the magic happens, and exactly what it does depends on how we configure our service metadata.
 
-In this case, it tells `finboxio/rancher-lb` to create an http frontend in HAProxy that listens on port 80, and to further create a backend that balances all requests with the Host header `haproxy.rancher.dev` to port 9090 across all of the healthy containers in this service. This is our haproxy stats page, since our metadata is configured to expose that on `:9090/` (see `metadata.stats.{port,path}` in rancher-compose).
+In this case, it tells `finboxio/rancher-lb` to create an http frontend in HAProxy that listens on port 80, and to further create a backend that balances all requests with the Host header `haproxy.rancher` to port 9090 across all of the healthy containers in this service. This is our haproxy stats page, since our metadata is configured to expose that on `:9090/` (see `metadata.stats.{port,path}` in rancher-compose).
 
 That's it. Our frontend is automatically created, our backend is automatically set up, our acls routing to that backend are automatically configured, and healthy containers are automatically added as they come and go. As services with similar labels are added/removed, the router will automatically expose/drop them.
 
@@ -188,7 +188,7 @@ environment | `<service_name>.<stack_name>.<environment_name>`
 
 This prefix is combined with each root `domain` specified in your service metadata (you may specify more than one), to generate a list of default domains for each service.
 
-So in the sample configuration, we're using the `service` scope, and have specified a single root domain of `http://rancher.dev`. Since our stats page is running under a service named `haproxy`, default rules are created to route `Host: haproxy.rancher.dev` traffic to it. If we're happy with that, we don't need to specify any additional domains.
+So in the sample configuration, we're using the `service` scope, and have specified a single root domain of `http://rancher`. Since our stats page is running under a service named `haproxy`, default rules are created to route `Host: haproxy.rancher` traffic to it. If we're happy with that, we don't need to specify any additional domains.
 
 Note that the https redirection semantics described above also apply to root domains if you specify them with `https://` protocol.
 
