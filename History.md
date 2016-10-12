@@ -1,4 +1,15 @@
 
+0.0.10 / 2016-10-12
+===================
+
+  * make default log level 'info'
+  * make default log level 'warn'
+  * add rancher deploy command to makefile
+  * remove .dev tld
+  * readme updates
+  * readme updates
+  * document the sonofabitch
+
 0.0.9 / 2016-09-10
 ==================
 
