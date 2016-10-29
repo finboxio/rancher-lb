@@ -1,4 +1,10 @@
 
+0.1.0 / 2016-10-28
+==================
+
+  * move default backend selection below custom domains
+  * add support for path-based routing
+
 0.0.10 / 2016-10-12
 ===================
 
