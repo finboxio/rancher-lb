@@ -280,7 +280,11 @@ backend {{ $backend.id }}
   {{ if $domain.path -}} acl acl_{{ $bdid }}_path path_beg -i {{ $domain.path }}
   {{ else }} acl acl_{{ $bdid }}_path always_true {{- end }}
 
-  {{ if $domain.path -}} reqirep ^([^\ ]*)\ {{ $domain.path }}/?(.*) \1\ /\2 if acl_{{ $bdid }}_path acl_{{ $bdid }}_domain {{- end }}
+  {{ if $domain.path -}}
+  http-request set-header X-Path-Prefix {{ $domain.path }}
+  reqirep ^([^\ ]*)\ {{ $domain.path }}/?(.*) \1\ /\2 if acl_{{ $bdid }}_path acl_{{ $bdid }}_domain
+  {{- end }}
+
   {{ end }}
 
   {{- $port := .port }}
