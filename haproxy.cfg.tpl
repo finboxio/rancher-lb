@@ -171,27 +171,24 @@ frontend live_check
   {{ if $backend.scope }}
 
   {{ if eq $backend.scope "environment" }}
-  acl acl_{{ $did }}_{{ $bid }}_default hdr(host) -i {{ $backend.service }}.{{ $backend.stack }}.{{ $backend.environment }}.{{ $root.host }}
+  acl acl_{{ $bid }}_{{ $did }}_default hdr(host) -i {{ $backend.service }}.{{ $backend.stack }}.{{ $backend.environment }}.{{ $root.host }}
   {{ else if eq $backend.scope "service" }}
-  acl acl_{{ $did }}_{{ $bid }}_default hdr(host) -i {{ $backend.service }}.{{ $root.host }}
+  acl acl_{{ $bid }}_{{ $did }}_default hdr(host) -i {{ $backend.service }}.{{ $root.host }}
   {{ else }}
-  acl acl_{{ $did }}_{{ $bid }}_default hdr(host) -i {{ $backend.service }}.{{ $backend.stack }}.{{ $root.host }}
+  acl acl_{{ $bid }}_{{ $did }}_default hdr(host) -i {{ $backend.service }}.{{ $backend.stack }}.{{ $root.host }}
   {{ end }}
 
   {{ else }}
 
   {{ if eq $.scope "environment" }}
-  acl acl_{{ $did }}_{{ $bid }}_default hdr(host) -i {{ $backend.service }}.{{ $backend.stack }}.{{ $backend.environment }}.{{ $root.host }}
+  acl acl_{{ $bid }}_{{ $did }}_default hdr(host) -i {{ $backend.service }}.{{ $backend.stack }}.{{ $backend.environment }}.{{ $root.host }}
   {{ else if eq $.scope "service" }}
-  acl acl_{{ $did }}_{{ $bid }}_default hdr(host) -i {{ $backend.service }}.{{ $root.host }}
+  acl acl_{{ $bid }}_{{ $did }}_default hdr(host) -i {{ $backend.service }}.{{ $root.host }}
   {{ else }}
-  acl acl_{{ $did }}_{{ $bid }}_default hdr(host) -i {{ $backend.service }}.{{ $backend.stack }}.{{ $root.host }}
+  acl acl_{{ $bid }}_{{ $did }}_default hdr(host) -i {{ $backend.service }}.{{ $backend.stack }}.{{ $root.host }}
   {{ end }}
 
   {{ end }}
-
-  use_backend {{ $bid }} if acl_{{ $did }}_{{ $bid }}_default
-
   {{ end }}
 
   ####
@@ -206,6 +203,19 @@ frontend live_check
   {{ $sdid := printf "%s_%s" $sbid .domain }}
   use_backend {{ $sbid }} if acl_{{ $sdid }}_domain acl_{{ $sdid }}_path
   {{- end }}
+
+
+  {{ range $backend := $.backends -}}
+  {{ if eq $backend.frontend $name -}}
+  {{ $dbid := $backend.id }}
+
+  {{ range $root := $.domains -}}
+  {{ $ddid := $root.id -}}
+  use_backend {{ $dbid }} if acl_{{ $dbid }}_{{ $ddid }}_default
+  {{ end }}
+
+  {{ end }}
+  {{ end }}
 
   ####################
   # END backend-acls
