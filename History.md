@@ -1,4 +1,9 @@
 
+0.1.1 / 2016-10-28
+==================
+
+  * add X-Path-Prefix header when path is rewritten (for safe redirects)
+
 0.1.0 / 2016-10-28
 ==================
 
