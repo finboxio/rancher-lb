@@ -122,7 +122,7 @@ frontend live_check
   {{ if $domain.scheme -}}
   acl acl_{{ $did }}_https {{ if eq $domain.scheme "https" -}} always_true {{ else -}} always_false {{- end }}
   acl acl_{{ $did }}_https_host {{ if $domain.host }} hdr(host) -i {{ $domain.host }} {{ else }} always_true {{ end }}
-  acl acl_{{ $did }}_https_path {{ if $domain.path }} path -i {{ $domain.path }} {{ else }} always_true {{ end }}
+  acl acl_{{ $did }}_https_path {{ if $domain.path }} path_beg -i {{ $domain.path }} {{ else }} always_true {{ end }}
   redirect scheme https code 301 if !is_proxy_https acl_{{ $did }}_https_host acl_{{ $did }}_https_path acl_{{ $did }}_https
   {{- end }}
 
@@ -136,8 +136,8 @@ frontend live_check
 
   {{ if $domain.host -}}
   {{ if eq (index $domain.host 0) '*' -}} acl acl_{{ $did }}_domain hdr_end(host) -i {{ $domain.host }}
-  {{- else if $domain.host -}} acl acl_{{ $did }}_domain hdr(host) -i {{ $domain.host }} {{- end }}
-  {{- end }}
+  {{ else -}} acl acl_{{ $did }}_domain hdr(host) -i {{ $domain.host }} {{- end }}
+  {{ else }} acl acl_{{ $did }}_domain always_false {{- end }}
 
   ####
   # END host-acls
@@ -147,13 +147,13 @@ frontend live_check
   # START path-acls
   ####
 
-  {{ if $domain.path -}} acl acl_{{ $did }}_domain path -i {{ $domain.host }} {{- end }}
+  {{ if $domain.path -}} acl acl_{{ $did }}_path path_beg -i {{ $domain.path }}
+  {{ else }} acl acl_{{ $did }}_path always_true {{- end }}
 
   ####
   # END path-acls
   ####
 
-  use_backend {{ $bid }} if acl_{{ $did }}_domain
   {{- end }}
 
   ############
@@ -199,6 +199,12 @@ frontend live_check
   ####
 
   {{- end }}
+  {{- end }}
+
+  {{ range $._sorted }}
+  {{ $sbid := .backend }}
+  {{ $sdid := printf "%s_%s" $sbid .domain }}
+  use_backend {{ $sbid }} if acl_{{ $sdid }}_domain acl_{{ $sdid }}_path
   {{- end }}
 
   ####################
@@ -252,6 +258,21 @@ frontend live_check
 {{ range $backend := .backends -}}
 backend {{ $backend.id }}
   {{ if $backend.mode -}} mode {{ $backend.mode }} {{ else }} mode http {{ end }}
+
+  {{ range $domain := $backend.domains -}}
+  {{ $bdid := printf "%s_%s" $backend.id $domain.id -}}
+
+  {{ if $domain.host -}}
+  {{ if eq (index $domain.host 0) '*' -}} acl acl_{{ $bdid }}_domain hdr_end(host) -i {{ $domain.host }}
+  {{ else -}} acl acl_{{ $bdid }}_domain hdr(host) -i {{ $domain.host }} {{- end }}
+  {{ else }} acl acl_{{ $bdid }}_domain always_false {{- end }}
+
+  {{ if $domain.path -}} acl acl_{{ $bdid }}_path path_beg -i {{ $domain.path }}
+  {{ else }} acl acl_{{ $bdid }}_path always_true {{- end }}
+
+  {{ if $domain.path -}} reqirep ^([^\ ]*)\ {{ $domain.path }}/?(.*) \1\ /\2 if acl_{{ $bdid }}_path acl_{{ $bdid }}_domain {{- end }}
+  {{ end }}
+
   {{- $port := .port }}
   {{- range $container := .containers }}
   server {{ $container.ip }} {{ $container.ip }}:{{ $port }} {{ if not $container.healthy }} disabled {{ end }}
