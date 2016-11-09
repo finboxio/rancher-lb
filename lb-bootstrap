@@ -71,5 +71,5 @@ while [[ ! -e /etc/haproxy/haproxy.cfg ]]; do
 done
 
 rsyslogd
-/usr/local/sbin/haproxy -D -p /var/run/haproxy.pid  -f /etc/haproxy/haproxy.cfg -sf $(ps -ef | grep /usr/local/sbin/haproxy | grep -v grep | awk '{ print $1 }' | xargs)
+/usr/local/sbin/haproxy -D -p /var/run/haproxy.pid -f /etc/haproxy/haproxy.cfg -sf $(cat /var/run/haproxy.pid)
 supervisord -c /etc/supervisor/supervisor.conf

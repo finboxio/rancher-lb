@@ -134,7 +134,7 @@ gotpl /etc/lb/haproxy.cfg.tpl </etc/lb/config.yml > /etc/lb/haproxy.cfg
 # Validate haproxy config and reload
 if haproxy -c -f /etc/lb/haproxy.cfg; then
   cp /etc/lb/haproxy.cfg /etc/haproxy/haproxy.cfg
-  /usr/local/sbin/haproxy -D -p /var/run/haproxy.pid  -f /etc/haproxy/haproxy.cfg -sf $(ps -ef | grep /usr/local/sbin/haproxy | grep -v grep | awk '{ print $1 }' | xargs)
+  /usr/local/sbin/haproxy -D -p /var/run/haproxy.pid -f /etc/haproxy/haproxy.cfg -sf $(cat /var/run/haproxy.pid)
 else
   echo "invalid haproxy config"
 fi
