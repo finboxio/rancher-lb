@@ -1,4 +1,10 @@
 
+0.1.2 / 2016-11-09
+==================
+
+  * update makefile
+  * reload haproxy with only one pid
+
 0.1.1 / 2016-10-28
 ==================
 
