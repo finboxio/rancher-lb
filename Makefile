@@ -47,7 +47,7 @@ info:
 version:
 	@echo $(BUILD_VERSION) | tr -d '\r' | tr -d '\n' | tr -d ' '
 
-rancher.deploy: docker.push
+rancher.deploy:
 	@rancher-compose \
 		--url $(RANCHER_URL) \
 		--access-key $(RANCHER_ACCESS_KEY) \
