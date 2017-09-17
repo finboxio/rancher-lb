@@ -7,4 +7,4 @@ services:
       io.rancher.scheduler.global: 'true'
       io.rancher.container.pull_image: always
       lb.haproxy.9090.frontend: 80/http
-    image: finboxio/rancher-lb:dev
+    image: finboxio/rancher-lb
