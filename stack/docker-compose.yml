@@ -2,7 +2,7 @@ version: '2'
 services:
   haproxy:
     ports:
-    - 80:80/tcp
+      - 80:80/tcp
     labels:
       io.rancher.scheduler.global: 'true'
       io.rancher.container.pull_image: always
