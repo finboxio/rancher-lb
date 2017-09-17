@@ -1,0 +1,27 @@
+{
+  "name": "rancher-lb",
+  "version": "0.1.2",
+  "description": "active haproxy load balancer for rancher",
+  "main": "index.js",
+  "scripts": {
+    "preversion": "scripts/prerelease",
+    "version": "scripts/release",
+    "postversion": "scripts/postrelease",
+    "publish": "scripts/publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/finboxio/rancher-lb.git"
+  },
+  "keywords": [
+    "rancher",
+    "haproxy",
+    "loadbalancer"
+  ],
+  "author": "finbox.io",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/finboxio/rancher-lb/issues"
+  },
+  "homepage": "https://github.com/finboxio/rancher-lb#readme"
+}
