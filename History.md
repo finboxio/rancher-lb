@@ -1,4 +1,13 @@
 
+0.2.0 / 2017-09-17
+==================
+
+  * Update makefile
+  * Update stack file
+  * Init npm package
+  * Upgrade stack files
+  * Add release scripts
+
 0.1.2 / 2016-11-09
 ==================
 
