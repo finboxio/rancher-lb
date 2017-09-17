@@ -12,7 +12,7 @@ haproxy:
     stats:
       port: 9090
     global:
-    - maxconn 4096
-    - debug
+      - maxconn 4096
+      - debug
     domains:
-    - http://rancher
+      - http://rancher
