@@ -1,4 +1,14 @@
-FROM alpine:3.4
+FROM golang:1.13-alpine AS go
+
+# install gotpl & confd
+RUN set -x \
+    && apk add --no-cache git \
+    && export GOPATH=/usr/src/go \
+    && go get github.com/tsg/gotpl \
+    && go get github.com/kelseyhightower/confd \
+    && apk del --no-cache git
+
+FROM alpine:3.4 AS final
 
 # install dependencies
 RUN apk add --no-cache curl nodejs rsyslog supervisor \
@@ -48,15 +58,8 @@ RUN set -x \
     && apk del --no-cache .build-deps
 
 # install gotpl & confd
-ENV GO_VERSION 1.6.3
-RUN set -x \
-    && apk add --no-cache go git \
-    && export GOPATH=/usr/src/go \
-    && go get github.com/tsg/gotpl \
-    && mv /usr/src/go/bin/gotpl /usr/bin/gotpl \
-    && go get github.com/kelseyhightower/confd \
-    && mv /usr/src/go/bin/confd /usr/bin/confd \
-    && apk del --no-cache go git
+COPY --from=go /usr/src/go/bin/gotpl /usr/bin/gotpl
+COPY --from=go /usr/src/go/bin/confd /usr/bin/confd
 
 ADD entries.tpl /etc/confd/templates/entries.tpl
 ADD entries.toml /etc/confd/conf.d/entries.toml

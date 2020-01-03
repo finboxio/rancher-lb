@@ -26,6 +26,16 @@ listen stats
 
 {{ end }}
 
+{{ range $backend := .backends -}}
+{{ range $domain := $backend.domains -}}
+{{ if $domain.user -}}
+{{ $bdid := printf "%s_%s" $backend.id $domain.id -}}
+userlist {{ $bdid }}
+  user {{ $domain.user }} insecure-password {{ $domain.pass }}
+{{- end }}
+{{- end }}
+{{- end }}
+
 ####
 # START live-check
 ####
@@ -276,6 +286,11 @@ backend {{ $backend.id }}
   {{ if eq (index $domain.host 0) '*' -}} acl acl_{{ $bdid }}_domain hdr_end(host) -i {{ $domain.host }}
   {{ else -}} acl acl_{{ $bdid }}_domain hdr(host) -i {{ $domain.host }} {{- end }}
   {{ else }} acl acl_{{ $bdid }}_domain always_false {{- end }}
+
+  {{ if $domain.user -}}
+  acl acl_{{ $bdid }}_auth http_auth({{ $bdid }})
+  http-request auth realm lb unless acl_{{ $bdid }}_auth
+  {{- end }}
 
   {{ if $domain.path -}} acl acl_{{ $bdid }}_path path_beg -i {{ $domain.path }}
   {{ else }} acl acl_{{ $bdid }}_path always_true {{- end }}
