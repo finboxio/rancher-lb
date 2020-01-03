@@ -32,7 +32,7 @@ listen stats
 {{ $bdid := printf "%s_%s" $backend.id $domain.id -}}
 userlist {{ $bdid }}
   user {{ $domain.user }} insecure-password {{ $domain.pass }}
-{{- end }}
+{{ end }}
 {{- end }}
 {{- end }}
 
