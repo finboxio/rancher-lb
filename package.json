@@ -1,6 +1,6 @@
 {
   "name": "rancher-lb",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "active haproxy load balancer for rancher",
   "main": "index.js",
   "scripts": {
