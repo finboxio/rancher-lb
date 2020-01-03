@@ -1,4 +1,10 @@
 
+0.3.0 / 2020-01-02
+==================
+
+  * add gitignore
+  * Add support for basic auth in domain
+
 0.2.1 / 2017-09-17
 ==================
 
